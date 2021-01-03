@@ -1,8 +1,10 @@
-import { getRepository, Repository } from 'typeorm';
+import { DeepPartial, getRepository, Repository } from 'typeorm';
 
 import IOrdersRepository from '@modules/orders/repositories/IOrdersRepository';
 import ICreateOrderDTO from '@modules/orders/dtos/ICreateOrderDTO';
+import Product from '@modules/products/infra/typeorm/entities/Product';
 import Order from '../entities/Order';
+import OrdersProducts from '../entities/OrdersProducts';
 
 class OrdersRepository implements IOrdersRepository {
   private ormRepository: Repository<Order>;
@@ -12,12 +14,19 @@ class OrdersRepository implements IOrdersRepository {
   }
 
   public async create({ customer, products }: ICreateOrderDTO): Promise<Order> {
-    const order = this.ormRepository.create({
-      customer,
-      order_products: products,
-    });
+    // const order = this.ormRepository.create({
+    //   customer,
+    //   order_products: products,
+    // });
 
-    await this.ormRepository.save(order);
+    const order = await this.ormRepository.save({
+      customer,
+      order_products: products.map(
+        (product): DeepPartial<OrdersProducts> => ({
+          ...product,
+        }),
+      ),
+    });
 
     return order;
   }
